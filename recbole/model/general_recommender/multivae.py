@@ -99,6 +99,7 @@ class MultiVAE(GeneralRecommender):
         of dimensions rating_matrix_users x self.lat_dim / 2.
         :return:
         """
+        rating_matrix = torch.from_numpy(rating_matrix).float().to(self.device)
         h = F.normalize(rating_matrix)
         # h = F.dropout(h, self.drop_out, training=self.training)
         h = self.encoder(h)
