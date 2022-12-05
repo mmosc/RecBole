@@ -44,8 +44,8 @@ class MultiVAE(GeneralRecommender):
 
         self.encode_layer_dims = [self.n_items] + self.layers + [self.lat_dim]
         self.decode_layer_dims = [int(self.lat_dim / 2)] + self.encode_layer_dims[::-1][
-            1:
-        ]
+                                                           1:
+                                                           ]
 
         self.encoder = self.mlp_layers(self.encode_layer_dims)
         self.decoder = self.mlp_layers(self.decode_layer_dims)
@@ -93,6 +93,21 @@ class MultiVAE(GeneralRecommender):
         else:
             return mu
 
+    def get_users_embeddings(self, rating_matrix):
+        """
+        the embedding of all users as a matrix
+        of dimensions rating_matrix_users x self.lat_dim / 2.
+        :return:
+        """
+        h = F.normalize(rating_matrix)
+        # h = F.dropout(h, self.drop_out, training=self.training)
+        h = self.encoder(h)
+        mu = h[:, : int(self.lat_dim / 2)]
+
+        return mu
+
+
+
     def forward(self, rating_matrix):
 
         h = F.normalize(rating_matrix)
@@ -102,7 +117,7 @@ class MultiVAE(GeneralRecommender):
         h = self.encoder(h)
 
         mu = h[:, : int(self.lat_dim / 2)]
-        logvar = h[:, int(self.lat_dim / 2) :]
+        logvar = h[:, int(self.lat_dim / 2):]
 
         z = self.reparameterize(mu, logvar)
         z = self.decoder(z)
@@ -123,9 +138,9 @@ class MultiVAE(GeneralRecommender):
 
         # KL loss
         kl_loss = (
-            -0.5
-            * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
-            * anneal
+                -0.5
+                * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
+                * anneal
         )
 
         # CE loss
